@@ -1,0 +1,52 @@
+
+# copyright (c) Igor Sysoev, Yuriy Ustyushenko
+
+
+
+    ngx_feature="java"
+    ngx_feature_name=
+    ngx_feature_run=no
+    ngx_feature_incs="#include <jni.h>"
+    ngx_feature_path="/opt/icedtea-bin-6.1.11.1/include
+                      /opt/icedtea-bin-6.1.11.1/include/linux"
+    ngx_feature_libs="-L/opt/icedtea-bin-6.1.11.1/jre/lib/amd64/server -ljvm"
+    ngx_feature_test="JNIEnv *env;
+                      JavaVM *jvm;
+                      JavaVMInitArgs vm_args;
+                      vm_args.version = JNI_VERSION_1_6;
+                      vm_args.nOptions = 0;
+                      vm_args.ignoreUnrecognized = 0;
+                      JNI_CreateJavaVM(&jvm, &env, &vm_args);"
+
+    . auto/feature
+
+if [ $ngx_found = yes ]; then
+    CORE_INCS="$CORE_INCS $ngx_feature_path"
+    CORE_LIBS="$CORE_LIBS $ngx_feature_libs"
+
+else
+
+cat << END
+
+$0: error: the HTTP JAVA module requires the java libraries.
+You can either do not enable the module or install the libraries.
+
+END
+
+    exit 1
+fi
+
+ngx_addon_name=ngx_http_java_module
+
+HTTP_MODULES="$HTTP_MODULES ngx_http_java_module"
+
+NGX_ADDON_SRCS="$NGX_ADDON_SRCS \
+    $ngx_addon_dir/src/ngx_http_java_module.c \
+    $ngx_addon_dir/src/ngx_http_java_context.c \
+    $ngx_addon_dir/src/ngx_http_java_servlet_context.c \
+"
+
+NGX_ADDON_DEPS="$NGX_ADDON_DEPS \
+    $ngx_addon_dir/src/ngx_http_java_module.h \
+    $ngx_addon_dir/src/ngx_http_java_core.h \
+"
